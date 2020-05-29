@@ -113,12 +113,12 @@ d3.csv("Switzerland.csv", rowConverter).then(function(data){
 //                console.log("data " + dataState);
 //                console.log("json " + jsonState);
 
-                if (dataState == jsonState) {
+                if (dataState == jsonState) { //if the canton is in both the csv and json
                     
 //                    console.log("data " + dataState);
 
                     //Copy the data value into the JSON
-                    json.features[j].properties.value = dataValue;
+                    json.features[j].properties.value = dataValue; //the density information is a value of the canton
                     
                     //console.log(json.features[j].properties.NAME_1 + " " + json.features[j].properties.value )
 
@@ -130,23 +130,24 @@ d3.csv("Switzerland.csv", rowConverter).then(function(data){
         }
         
         
-        
+
+//winding of the json features to get the correct ordering of coordinates        
         
         var features = json.features;
         
         
         features.forEach(function(feature) {
-           if(feature.geometry.type == "MultiPolygon") {
+           if(feature.geometry.type == "MultiPolygon") { //if multipolygon
              feature.geometry.coordinates.forEach(function(polygon) {
                  //console.log("multi " + feature.properties.NAME_1);
 
                polygon.forEach(function(ring) {
-                 ring.reverse();
+                 ring.reverse(); //reverse the ordering of coordinates in the polygon
                  //console.log(ring); 
                })
              })
            }
-           else if (feature.geometry.type == "Polygon") {
+           else if (feature.geometry.type == "Polygon") { //if polygon
                //console.log("poly " + feature.properties.NAME_1);
              feature.geometry.coordinates.forEach(function(ring) {
                ring.reverse();
@@ -157,6 +158,8 @@ d3.csv("Switzerland.csv", rowConverter).then(function(data){
         
 
 
+        
+//Drawing the map for the country        
 
         //Bind data and create one path per GeoJSON feature
         svg.selectAll("path")
@@ -165,9 +168,9 @@ d3.csv("Switzerland.csv", rowConverter).then(function(data){
            .enter()
            .append("path")
            .attr("d", path)
-           .attr("stroke", "black")
+           .attr("stroke", "black") //change the border for each canton
            .attr("stroke-width", 0.5)
-           .style("fill", function(d) {
+           .style("fill", function(d) { //fill the color of each canton based on the density of population
                 //Get data value
                 var value = d.properties.value;
             
@@ -183,29 +186,35 @@ d3.csv("Switzerland.csv", rowConverter).then(function(data){
            });
         
        
-        
+
+//Drawing the legend        
+//Referred to: https://bl.ocks.org/mbostock/670b9fe0577a29c39a1803f59c628769
        
+        //create a new scale for the legend
         var x = d3.scaleSqrt()
             .domain([0, 4500])
             .rangeRound([440, 950]);
 
+        //position the legend
         var g = svg.append("g")
             .attr("class", "key")
             .attr("transform", "translate(-150,550)");
 
+        //get the 
         g.selectAll("rect")
-          .data(color.range().map(function(d) {
-              d = color.invertExtent(d);
-              if (d[0] == null) d[0] = x.domain()[0];
-              if (d[1] == null) d[1] = x.domain()[1];
+          .data(color.range().map(function(d) { //for each color in the scale
+              d = color.invertExtent(d);//get the domain value of that color
+              if (d[0] == null) d[0] = x.domain()[0]; //if null then first part of x domain
+              if (d[1] == null) d[1] = x.domain()[1]; //or last part
               return d;
             }))
           .enter().append("rect")
             .attr("height", 8)
             .attr("x", function(d) { return x(d[0]); })
-            .attr("width", function(d) { return x(d[1]) - x(d[0]); })
-            .attr("fill", function(d) { return color(d[0]); });
+            .attr("width", function(d) { return x(d[1]) - x(d[0]); }) //get the width of the legend from x
+            .attr("fill", function(d) { return color(d[0]); }); //get the color for that rectangle
 
+        //add the Title of the Legend on top of it
         g.append("text")
             .attr("class", "caption")
             .attr("x", x.range()[0])
@@ -215,9 +224,10 @@ d3.csv("Switzerland.csv", rowConverter).then(function(data){
             .attr("font-weight", "bold")
             .text("Population per square kilometer");
 
+        //add an axis on the bottom with ticks for each color
         g.call(d3.axisBottom(x)
             .tickSize(13)
-            .tickValues(color.domain()))
+            .tickValues(color.domain())) //get the different colors
           .select(".domain")
             .remove();
 
