@@ -92,7 +92,7 @@ d3.csv("Switzerland.csv", rowConverter).then(function(data){
     
 
     //Load in GeoJSON data
-    d3.json("Switzerland1.json").then(function(json){
+    d3.json("Switzerland.json").then(function(json){
         
         console.log("json")
 
